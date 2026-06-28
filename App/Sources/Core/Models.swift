@@ -98,6 +98,7 @@ struct SentenceItem: Codable, Identifiable, Hashable {
         translationKo = (try? c.decode(String.self, forKey: .translationKo)) ?? ""
         tokens = (try? c.decodeIfPresent([String].self, forKey: .tokens)) ?? []
     }
+
 }
 
 struct AnalysisSegment: Codable, Hashable {

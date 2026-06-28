@@ -34,9 +34,34 @@ struct LearnView: View {
             } else if words.isEmpty {
                 Text("학습할 단어가 없습니다.").foregroundColor(Theme.textMuted)
             } else if idx >= words.count {
-                Text("완료! 🎉").font(.title).foregroundColor(Theme.text)
+                VStack(spacing: 20) {
+                    Text("완료! 🎉").font(.title).foregroundColor(Theme.text)
+                    Button("다시 시작") {
+                        idx = 0
+                        reveal = false
+                        store.saveProgress(lessonId: lessonId, idx: 0)
+                    }
+                    .font(.headline.bold()).foregroundColor(.white)
+                    .padding(.horizontal, 32).padding(.vertical, 12)
+                    .background(Theme.accent).cornerRadius(12)
+                }
             } else {
                 content(words[idx])
+                    .gesture(
+                        DragGesture(minimumDistance: 40)
+                            .onEnded { value in
+                                let dx = value.translation.width
+                                let dy = value.translation.height
+                                guard abs(dx) > abs(dy) else { return }
+                                if dx < 0, idx < words.count - 1 {
+                                    advance(GRADE_KNOWN, words[idx])
+                                } else if dx > 0, idx > 0 {
+                                    reveal = false
+                                    idx -= 1
+                                    store.saveProgress(lessonId: lessonId, idx: idx)
+                                }
+                            }
+                    )
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -48,6 +73,8 @@ struct LearnView: View {
     private func load() async {
         words = (try? await Repo.learnQueue(lessonId)) ?? []
         loading = false
+        let saved = store.loadProgress(lessonId: lessonId)
+        if saved < words.count { idx = saved }
     }
 
     private var usLocale: String {
@@ -135,11 +162,15 @@ struct LearnView: View {
 
     private func toolbar(_ cur: Word) -> some View {
         HStack(spacing: 20) {
-            navButton("‹", label: "이전 단어", enabled: idx > 0) { reveal = false; idx = max(0, idx - 1) }
+            navButton("‹", label: "이전 단어", enabled: idx > 0) {
+                reveal = false
+                idx = max(0, idx - 1)
+                store.saveProgress(lessonId: lessonId, idx: idx)
+            }
             midButton("🗑", label: "모르겠어요") { advance(GRADE_UNKNOWN, cur) }
             midButton(store.isFavorite(cur.id) ? "🔖" : "🏷",
                       label: store.isFavorite(cur.id) ? "즐겨찾기 해제" : "즐겨찾기 추가") {
-                store.toggleFavorite(cur.id)
+                store.toggleFavorite(cur)
             }
             navButton("›", label: "다음 단어 · 알아요", enabled: true) { advance(GRADE_KNOWN, cur) }
         }
@@ -147,10 +178,11 @@ struct LearnView: View {
     }
 
     private func advance(_ g: Int, _ cur: Word) {
-        store.recordGrade(wordId: cur.id, grade: g)   // persist locally (guest)
+        store.recordGrade(wordId: cur.id, grade: g)
         Task { await Repo.grade(wordId: cur.id, grade: g) }
         reveal = false
         idx += 1
+        store.saveProgress(lessonId: lessonId, idx: idx)
     }
 
     private func navButton(_ glyph: String, label: String, enabled: Bool, _ action: @escaping () -> Void) -> some View {
@@ -171,11 +203,11 @@ struct LearnView: View {
         .accessibilityLabel(label)
     }
 
-    /// Backend words often lack imageUrl; deterministic picsum fallback (RN scheme).
+    /// Word-relevant image via loremflickr; falls back to imageUrl from backend.
     private func imageURL(_ w: Word) -> String {
         if let u = w.imageUrl, !u.isEmpty { return u }
         let slug = w.word.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? w.word
-        return "https://picsum.photos/seed/toeic-\(slug)/640/420"
+        return "https://loremflickr.com/640/420/\(slug)"
     }
 
     /// Example sentence with the target word bolded (RN ExampleSentence).

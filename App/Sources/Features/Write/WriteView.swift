@@ -10,6 +10,8 @@ struct WriteView: View {
     @State private var idx = 0
     @State private var picked: [String] = []
     @State private var checked = false
+    @State private var showHint = false
+    @ObservedObject private var store = LocalStore.shared
 
     var body: some View {
         Group {
@@ -36,7 +38,6 @@ struct WriteView: View {
     }
 
     private func content(_ item: SentenceItem) -> some View {
-        // Shuffle tokens deterministically by id so chips aren't in answer order.
         let chips = item.tokens.sorted { a, b in
             (a.hashValue ^ item.id.hashValue) < (b.hashValue ^ item.id.hashValue)
         }
@@ -45,14 +46,21 @@ struct WriteView: View {
             Text(item.translationKo).font(.title3.bold()).foregroundColor(Theme.text)
             Text(item.prompt).font(.body).foregroundColor(Theme.textMuted)
 
-            // Built sentence area.
+            if showHint {
+                Text(item.fullSentence)
+                    .font(.body).foregroundColor(Color(hex: 0x92400E))
+                    .padding(12)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color(hex: 0xFEF3C7))
+                    .cornerRadius(10)
+            }
+
             FlowChips(picked.isEmpty ? ["___"] : picked, color: Theme.accent) { token in
                 if !checked, let i = picked.firstIndex(of: token) { picked.remove(at: i) }
             }
 
             Divider().background(Theme.border)
 
-            // Token bank.
             FlowChips(chips.filter { !usedUp($0, in: chips) }, color: Theme.bgElev) { token in
                 if !checked { picked.append(token) }
             }
@@ -70,16 +78,27 @@ struct WriteView: View {
 
             Spacer()
 
-            Button(checked ? "다음" : "확인") {
-                if checked { next() } else { checked = true; Tts.shared.speak(item.fullSentence) }
+            // Toolbar: 이전 | 힌트 | 북마크 | 확인/다음
+            HStack(spacing: 10) {
+                toolbarBtn("‹ 이전", enabled: idx > 0) { goPrev() }
+
+                toolbarBtn("💡 힌트", enabled: !checked) { showHint.toggle() }
+
+                toolbarBtn(store.isSentenceFavorite(item.id) ? "🔖" : "🏷", enabled: true) {
+                    store.toggleSentenceFavorite(item)
+                }
+
+                Button(checked ? "다음 →" : "확인") {
+                    if checked { next() } else { checked = true; Tts.shared.speak(item.fullSentence) }
+                }
+                .font(.headline.bold()).foregroundColor(.white)
+                .frame(maxWidth: .infinity).padding(.vertical, 12)
+                .background(Theme.accent).cornerRadius(10)
             }
-            .font(.headline.bold()).foregroundColor(.white)
-            .frame(maxWidth: .infinity).padding().background(Theme.accent).cornerRadius(12)
         }
         .padding(16)
     }
 
-    // A token may legitimately repeat; only hide as many as were picked.
     private func usedUp(_ token: String, in bank: [String]) -> Bool {
         let inBank = bank.filter { $0 == token }.count
         let inPicked = picked.filter { $0 == token }.count
@@ -94,6 +113,24 @@ struct WriteView: View {
         idx += 1
         picked = []
         checked = false
+        showHint = false
+    }
+
+    private func goPrev() {
+        guard idx > 0 else { return }
+        idx -= 1
+        picked = []
+        checked = false
+        showHint = false
+    }
+
+    private func toolbarBtn(_ label: String, enabled: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(label).font(.subheadline.bold()).foregroundColor(enabled ? Theme.text : Theme.textMuted)
+                .frame(maxWidth: .infinity).padding(.vertical, 12)
+                .background(Theme.bgElev).cornerRadius(10)
+        }
+        .disabled(!enabled)
     }
 }
 
@@ -108,7 +145,6 @@ private struct FlowChips: View {
     }
 
     var body: some View {
-        // Indexed so duplicate tokens are distinct tappable chips.
         let cols = [GridItem(.adaptive(minimum: 70), spacing: 8)]
         LazyVGrid(columns: cols, alignment: .leading, spacing: 8) {
             ForEach(Array(tokens.enumerated()), id: \.offset) { _, token in

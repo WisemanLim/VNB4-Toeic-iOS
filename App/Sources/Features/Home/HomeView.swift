@@ -24,6 +24,7 @@ struct HomeView: View {
                     analysisCard
                     section("오늘의 학습")
                     reviewCard
+                    bookmarksCard
                     section("LC · 듣기")
                     grid(lc) { p in NavigationLink(value: Route.learn("part-\(p.p)")) { PartCard(part: p) } }
                     section("RC · 독해")
@@ -45,6 +46,7 @@ struct HomeView: View {
                 case .learn(let id): LearnView(lessonId: id)
                 case .write(let part): WriteView(part: part)
                 case .login: LoginView()
+                case .bookmarks: BookmarksView()
                 }
             }
             .task(id: auth.status == .authed) { await reload() }
@@ -133,6 +135,22 @@ struct HomeView: View {
         }
     }
 
+    private var bookmarksCard: some View {
+        NavigationLink(value: Route.bookmarks) {
+            HStack(spacing: 12) {
+                Text("🔖").font(.title2)
+                    .frame(width: 40, height: 40).background(Color.white.opacity(0.25)).clipShape(Circle())
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("북마크 모아보기").font(.headline.bold()).foregroundColor(Theme.text)
+                    Text("저장한 단어·문장 확인").font(.subheadline).foregroundColor(Theme.textMuted)
+                }
+                Spacer()
+                Text("›").font(.title).foregroundColor(Theme.textMuted)
+            }
+            .padding(16).background(Theme.bgCard).cornerRadius(16)
+        }
+    }
+
     private func section(_ t: String) -> some View {
         Text(t).font(.title3.bold()).foregroundColor(Theme.text)
     }
@@ -149,6 +167,7 @@ enum Route: Hashable {
     case learn(String)
     case write(Int)
     case login
+    case bookmarks
 }
 
 private struct PartCard: View {

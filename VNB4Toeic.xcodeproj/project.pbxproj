@@ -16,6 +16,7 @@
 		598B83F9611C6D97808FACC6 /* ScoreDonut.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F28B90DAB79BC15A537E5B7 /* ScoreDonut.swift */; };
 		6A57F1045AC76205BA9ECEE9 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F10105740D4C68BD4C3111D /* ContentView.swift */; };
 		6A6B0B12484F0AD1A95258CE /* LearnView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75D24DCD22F5BC7D01073DDD /* LearnView.swift */; };
+		AA11BB22CC33DD44EE55FF66 /* BookmarksView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB22CC33DD44EE55FF77 /* BookmarksView.swift */; };
 		6B78410F49E9664F4C71D311 /* Env.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B0D32E114115D781C83835D /* Env.swift */; };
 		7AB5C6BD71821890C76B0BC1 /* App.swift in Sources */ = {isa = PBXBuildFile; fileRef = 848C79FC41A0D406DD93A8D1 /* App.swift */; };
 		7EDCBCE8F15C3910CDBB1838 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5B659B8B51BC7C3F7936307 /* APIClient.swift */; };
@@ -62,6 +63,7 @@
 		6F10105740D4C68BD4C3111D /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		6F28B90DAB79BC15A537E5B7 /* ScoreDonut.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreDonut.swift; sourceTree = "<group>"; };
 		75D24DCD22F5BC7D01073DDD /* LearnView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LearnView.swift; sourceTree = "<group>"; };
+		AA11BB22CC33DD44EE55FF77 /* BookmarksView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookmarksView.swift; sourceTree = "<group>"; };
 		78FFA2D845BA5D5E7DEC07B9 /* WriteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WriteView.swift; sourceTree = "<group>"; };
 		80AFD8DACA81EF93BA26D8AA /* .gitkeep */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitkeep; sourceTree = "<group>"; };
 		848C79FC41A0D406DD93A8D1 /* App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App.swift; sourceTree = "<group>"; };
@@ -107,6 +109,7 @@
 			isa = PBXGroup;
 			children = (
 				75D24DCD22F5BC7D01073DDD /* LearnView.swift */,
+				AA11BB22CC33DD44EE55FF77 /* BookmarksView.swift */,
 				5ECE5768E6EF4F235DD363E3 /* Tts.swift */,
 			);
 			path = Learn;
@@ -363,6 +366,7 @@
 				FCE462E4B4B2D4CCEAECD086 /* HomeView.swift in Sources */,
 				1EBB436BDF4EFBB3FA54F775 /* Keychain.swift in Sources */,
 				6A6B0B12484F0AD1A95258CE /* LearnView.swift in Sources */,
+				AA11BB22CC33DD44EE55FF66 /* BookmarksView.swift in Sources */,
 				4080C8404E88D60F3301FA02 /* LoginView.swift in Sources */,
 				86FDD16FC01BAA69E7807163 /* Mocks.swift in Sources */,
 				FB3929CDCF92BA4A7BB51916 /* Models.swift in Sources */,

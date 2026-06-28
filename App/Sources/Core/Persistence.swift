@@ -49,28 +49,72 @@ final class Persistence {
     }
 }
 
-/// Favorites + learning progress, persisted via CoreData. Observable for SwiftUI.
+/// Favorites + learning progress, persisted via CoreData + UserDefaults. Observable for SwiftUI.
 @MainActor
 final class LocalStore: ObservableObject {
     static let shared = LocalStore()
 
     @Published private(set) var favorites: Set<String> = []
+    @Published private(set) var bookmarkedWords: [Word] = []
+    @Published private(set) var bookmarkedSentences: [SentenceItem] = []
+
     private let ctx: NSManagedObjectContext
+    private let ud = UserDefaults.standard
 
     init(context: NSManagedObjectContext = Persistence.shared.context) {
         ctx = context
         favorites = loadFavorites()
+        bookmarkedWords = loadUD([Word].self, key: "bm_words") ?? []
+        bookmarkedSentences = loadUD([SentenceItem].self, key: "bm_sentences") ?? []
     }
+
+    // MARK: – Word bookmarks
 
     func isFavorite(_ wordId: String) -> Bool { favorites.contains(wordId) }
 
-    func toggleFavorite(_ wordId: String) {
-        if favorites.contains(wordId) { deleteFavorite(wordId); favorites.remove(wordId) }
-        else { insertFavorite(wordId); favorites.insert(wordId) }
+    func toggleFavorite(_ word: Word) {
+        if favorites.contains(word.id) {
+            deleteFavorite(word.id)
+            favorites.remove(word.id)
+            bookmarkedWords.removeAll { $0.id == word.id }
+        } else {
+            insertFavorite(word.id)
+            favorites.insert(word.id)
+            bookmarkedWords.append(word)
+        }
+        saveUD(bookmarkedWords, key: "bm_words")
         save()
     }
 
-    /// Persist an SRS grade locally (guest path; server handles authed grading).
+    // MARK: – Sentence bookmarks
+
+    func isSentenceFavorite(_ id: String) -> Bool {
+        bookmarkedSentences.contains { $0.id == id }
+    }
+
+    func toggleSentenceFavorite(_ sentence: SentenceItem) {
+        if isSentenceFavorite(sentence.id) {
+            bookmarkedSentences.removeAll { $0.id == sentence.id }
+        } else {
+            bookmarkedSentences.append(sentence)
+        }
+        saveUD(bookmarkedSentences, key: "bm_sentences")
+    }
+
+    // MARK: – Learn progress (lessonId → idx)
+
+    func saveProgress(lessonId: String, idx: Int) {
+        var map = loadUD([String: Int].self, key: "learn_progress") ?? [:]
+        map[lessonId] = idx
+        saveUD(map, key: "learn_progress")
+    }
+
+    func loadProgress(lessonId: String) -> Int {
+        (loadUD([String: Int].self, key: "learn_progress") ?? [:])[lessonId] ?? 0
+    }
+
+    // MARK: – SRS grade
+
     func recordGrade(wordId: String, grade: Int) {
         let req = NSFetchRequest<NSManagedObject>(entityName: "WordProgress")
         req.predicate = NSPredicate(format: "wordId == %@", wordId)
@@ -87,7 +131,7 @@ final class LocalStore: ObservableObject {
         return (try? ctx.count(for: req)) ?? 0
     }
 
-    // MARK: CoreData helpers
+    // MARK: – CoreData helpers
 
     private func loadFavorites() -> Set<String> {
         let req = NSFetchRequest<NSManagedObject>(entityName: "Favorite")
@@ -107,4 +151,15 @@ final class LocalStore: ObservableObject {
     }
 
     private func save() { if ctx.hasChanges { try? ctx.save() } }
+
+    // MARK: – UserDefaults JSON helpers
+
+    private func loadUD<T: Decodable>(_ type: T.Type, key: String) -> T? {
+        guard let data = ud.data(forKey: key) else { return nil }
+        return try? JSONDecoder().decode(type, from: data)
+    }
+
+    private func saveUD<T: Encodable>(_ value: T, key: String) {
+        ud.set(try? JSONEncoder().encode(value), forKey: key)
+    }
 }
