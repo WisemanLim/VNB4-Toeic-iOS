@@ -61,12 +61,13 @@ final class AppTests: XCTestCase {
 
     /// CoreData(프로그래매틱, in-memory) 즐겨찾기 + 진도 영속화 동작.
     @MainActor
-    func testLocalStorePersistence() {
+    func testLocalStorePersistence() throws {
+        let w1 = try JSONDecoder().decode(Word.self, from: Data(#"{"id":"w1","word":"test","meaningKo":"테스트"}"#.utf8))
         let store = LocalStore(context: Persistence(inMemory: true).context)
         XCTAssertFalse(store.isFavorite("w1"))
-        store.toggleFavorite("w1")
+        store.toggleFavorite(w1)
         XCTAssertTrue(store.isFavorite("w1"))
-        store.toggleFavorite("w1")
+        store.toggleFavorite(w1)
         XCTAssertFalse(store.isFavorite("w1"))
 
         store.recordGrade(wordId: "w2", grade: 4)
