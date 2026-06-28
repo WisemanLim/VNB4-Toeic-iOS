@@ -2,131 +2,156 @@
 
 > 🌐 **Language**: [한국어](README.md) · **English**
 
-Native iOS TOEIC vocabulary app (Swift + SwiftUI). A native port of the existing
-React Native (Expo) app ([VNB4-Toeic-app](../../Apps-Mobile/VNB4-Toeic-app)).
+Native iOS TOEIC vocabulary app (Swift + SwiftUI). A native port of the existing React Native (Expo) app.
 
 - **App name** (home screen): Vocabulary Notebook for TOEIC · **App Store name**: TOEIC Vocabulary Notebook – VNB4 · **Bundle ID**: `com.vnb4.vocabnote`
 
-> **Scaffold**: `wise-dev-standard` plugin / profile `ios-swiftui` / domain `edtech`.
-> Docs: [PRD.md](PRD.md) · [COMPLIANCE.md](COMPLIANCE.md)
+> Docs: [PRD.md](.docs/PRD.md) · [COMPLIANCE.md](COMPLIANCE.md)
 
 ## Tech Stack
 | Layer | Tool |
 |------|------|
 | Language | Swift 6 |
-| UI | SwiftUI (iOS **16+**, iPhone+iPad) |
-| Project generation | **XcodeGen** (`project.yml` → `.xcodeproj`) |
-| Storage | Keychain (token) · bundled seed (offline) |
+| UI | SwiftUI (iOS **16+**, iPhone + iPad) |
+| Project | VNB4Toeic.xcodeproj (directly edited; `project.yml` XcodeGen source maintained in parallel) |
+| Persistence | CoreData (favorites · SRS grades) + UserDefaults JSON (bookmark objects · learn progress) |
+| Token | Keychain |
+| Offline | Bundled seed (words.json 3,686 words / sentences.json 198 items) |
 | Speech | AVSpeechSynthesizer (system TTS, US/GB/AU) |
-| Chart | Hand-rolled donut (trimmed Circle, iOS16-safe) |
+| Images | `loremflickr.com` (keyword-relevant); backend `imageUrl` takes priority |
+| Chart | Hand-rolled donut (trimmed Circle, iOS 16-safe) |
 | Deploy | Fastlane → TestFlight |
 | CI | GitHub Actions (macOS) |
 
-## Architecture / Layout
+## Architecture / Directory Layout
 ```
 App/Sources/
-├── App.swift              # @main, injects AuthStore
-├── ContentView.swift      # root gate (loading → Home)
+├── App.swift
+├── ContentView.swift
 ├── Core/
-│   ├── Models.swift       # Codable: Word/SentenceItem/Analysis/Lesson… (part coercion, lenient)
+│   ├── Models.swift       # Codable: Word/SentenceItem/Analysis (part coercion, lenient)
 │   ├── Seed.swift         # bundled words.json/sentences.json loader
-│   ├── APIClient.swift    # URLSession async + guest mock routing + token
-│   ├── Mocks.swift        # seed-backed offline routing (/words,/sentences,/me/analysis…)
-│   ├── Repository.swift   # data access (ported from RN queries.ts)
-│   ├── AuthStore.swift    # session (guest/authed), login/signup/logout + minor-consent gate
-│   ├── ConsentGate.swift  # guardian consent for under-14 (PIPA §22-2)
-│   ├── Persistence.swift  # CoreData (programmatic) + LocalStore (favorites/progress)
+│   ├── APIClient.swift    # URLSession async + guest mock routing + token injection
+│   ├── Mocks.swift        # seed-backed offline routing
+│   ├── Repository.swift   # data access layer
+│   ├── AuthStore.swift    # session (guest/authed), login/signup/logout
+│   ├── ConsentGate.swift  # guardian-consent gate for under-14 (PIPA §22-2)
+│   ├── Persistence.swift  # CoreData (Favorite·WordProgress) + LocalStore (bookmarks·progress via UserDefaults)
 │   ├── Keychain.swift     # token store
 │   └── Theme.swift        # design tokens + part catalog
 ├── Features/
-│   ├── Home/HomeView.swift, ScoreDonut.swift
-│   ├── Learn/LearnView.swift, Tts.swift
-│   ├── Write/WriteView.swift
-│   └── Auth/LoginView.swift
-App/Resources/             # words.json (3,686 words) · sentences.json (198 items) + Assets.xcassets (AppIcon/AccentColor) bundled
-Config/                    # Debug/Staging/Release.xcconfig (API_BASE_URL, flavor)
+│   ├── Home/
+│   │   ├── HomeView.swift      # home (grid · review card · bookmarks card)
+│   │   └── ScoreDonut.swift    # weakness-type donut chart
+│   ├── Learn/
+│   │   ├── LearnView.swift     # word learning card (swipe · progress restore · loremflickr)
+│   │   ├── BookmarksView.swift # bookmark collection (words + sentences)
+│   │   └── Tts.swift           # AVSpeechSynthesizer wrapper
+│   ├── Write/
+│   │   └── WriteView.swift     # sentence writing · shadowing (hint · prev · bookmark)
+│   └── Auth/
+│       └── LoginView.swift
+App/Resources/             # words.json · sentences.json · Assets.xcassets (AppIcon/AccentColor)
+Config/                    # Debug/Staging/Release.xcconfig (API_BASE_URL)
 AppTests/ · AppUITests/    # XCTest · XCUITest
-test/                      # testing standard (dev-env, impl/<Nth>)
+test/                      # testing standard (dev-env · impl/<Nth>)
 ```
 
-### Data-source switch (ported from RN)
+### Data-source switch
 - **Guest (not logged in)** → bundled seed + `Mocks`, fully **offline**.
-- **Logged in** → real backend (`API_BASE_URL`/api/v1) syncs words/sentences/progress/analysis. `/auth/*` always hits the server.
-- `USE_MOCK` (Info.plist) → everything mock, regardless of auth.
+- **Logged in** → real backend (`API_BASE_URL`/api/v1) syncs words/sentences/review/analysis. `/auth/*` always hits the server.
+- `USE_MOCK` (Info.plist) → everything mocked, regardless of auth state.
 
 ## Prerequisites
 - macOS + **Xcode 16+**
-- **XcodeGen** (`brew install xcodegen`) — required to generate the `.xcodeproj`
+- (optional) **XcodeGen** (`brew install xcodegen`) — needed only to regenerate from `project.yml`
 - (deploy) Ruby/Bundler + Fastlane, Apple Developer account
 
 ## Environment
-flavor + `API_BASE_URL` + signing (no DB — mobile). Never commit real secrets/signing keys.
+`API_BASE_URL` flows `Config/*.xcconfig` → Info.plist → `Env.apiBase`. Never commit real secrets or signing keys.
 
 | Env | File | flavor | API base |
 |---|---|---|---|
-| local | [.env.local](.env.local) | Debug | http://localhost:4000 |
-| dev | [.env.dev](.env.dev) | Debug | https://dev.api.example `assumed` |
-| staging | [.env.staging](.env.staging) | Staging | https://stg.api.example `assumed` |
-| prod | [.env.prod](.env.prod) | Release | (injected) |
+| local | `.env.local` | Debug | http://localhost:4000 |
+| dev | `.env.dev` | Debug | https://dev.api.example `assumed` |
+| staging | `.env.staging` | Staging | https://stg.api.example `assumed` |
+| prod | `.env.prod` | Release | (injected) |
 
-`API_BASE_URL` flows `Config/*.xcconfig` → Info.plist → `Env.apiBase`. Replace xcconfig when the server URL is finalized.
+## Run
 
-## Run (Simulator)
+### Simulator (recommended)
 ```bash
-make gen     # project.yml → VNB4Toeic.xcodeproj (regenerate when sources/config change)
-make dev     # gen + build on iPhone 17 simulator
-make test    # gen + XCTest/XCUITest
-open VNB4Toeic.xcodeproj   # ▶ Cmd+R in Xcode
+# Open in Xcode
+open VNB4Toeic.xcodeproj   # ▶ Cmd+R
 
-# other simulator
-make dev DEST='platform=iOS Simulator,name=iPhone 17 Pro'
+# Command-line build
+xcodebuild -scheme App \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
+  build
+
+# Makefile shortcuts (XcodeGen workflow)
+make gen     # project.yml → regenerate VNB4Toeic.xcodeproj
+make dev     # gen + simulator build
+make test    # gen + XCTest/XCUITest
 ```
-> The `.xcodeproj` is generated (gitignored). Commit only `project.yml`. Run `make gen` after cloning.
+
+> `VNB4Toeic.xcodeproj` is **committed** (directly edited). `project.yml` is maintained in parallel as the XcodeGen source.
 
 ### Build & Deploy (Fastlane → TestFlight)
 ```bash
-make build   # fastlane ios build (gym archive .ipa)
+make build   # fastlane ios build (gym archive → .ipa)
 make deploy  # fastlane ios beta (TestFlight upload)
 ```
-> Signing via `match`/ASC API key injection — never commit `.p12`/provisioning. Stub (not executed).
+> Signing via `match`/ASC API key injection — never commit `.p12`/provisioning profiles. Currently a stub.
 
-## Implemented features (PRD mapping)
-| PRD feature | Status | Location |
+## Implemented Features
+
+### Core features (PRD §3-A)
+| Feature | Location |
+|---|---|
+| Word learning card (image · IPA · Korean pron · example · TTS) | [LearnView.swift](App/Sources/Features/Learn/LearnView.swift) |
+| Multinational TTS (US/GB/AU) | [Tts.swift](App/Sources/Features/Learn/Tts.swift) |
+| Per-part word learning (LC Part1–4 / RC Part5–7) | HomeView grid + Repository |
+| SRS review queue | HomeView review card |
+| Weakness donut statistics | [ScoreDonut.swift](App/Sources/Features/Home/ScoreDonut.swift) |
+| Sentence writing · shadowing (chips → check → 🔊) | [WriteView.swift](App/Sources/Features/Write/WriteView.swift) |
+| Guest/login + Email auth | [AuthStore.swift](App/Sources/Core/AuthStore.swift) |
+| Favorites/bookmarks persistence | [Persistence.swift](App/Sources/Core/Persistence.swift) |
+| Minor guardian-consent gate (PIPA §22-2) | [ConsentGate.swift](App/Sources/Core/ConsentGate.swift) |
+| Accessibility (VoiceOver · Dynamic Type) | LearnView accessibilityLabel |
+| iPad adaptive layout (2↔4 columns) | [HomeView.swift](App/Sources/Features/Home/HomeView.swift) |
+
+### UX improvements (PRD §3-B, v0.3)
+| Feature | Description | Location |
 |---|---|---|
-| Word card (IPA/Korean pron/example/image) | ✅ | [LearnView.swift](App/Sources/Features/Learn/LearnView.swift) |
-| Multinational TTS (US/GB/AU) | ✅ AVSpeechSynthesizer | [Tts.swift](App/Sources/Features/Learn/Tts.swift) |
-| Per-part full-word learning | ✅ (seed part filter, paginated) | Repository/Mocks |
-| SRS review queue | ✅ (guest = top-30 sample) | HomeView review card |
-| Weakness donut stats | ✅ (guest = empty track + CTA) | [ScoreDonut.swift](App/Sources/Features/Home/ScoreDonut.swift) |
-| Sentence writing · shadowing | ✅ (chips → sentence → check → 🔊) | [WriteView.swift](App/Sources/Features/Write/WriteView.swift) |
-| Guest/login + Email auth | ✅ guest offline / login server | [AuthStore.swift](App/Sources/Core/AuthStore.swift) |
-| Notes/favorites + progress | ✅ CoreData persistence | [Persistence.swift](App/Sources/Core/Persistence.swift) |
-| Minor guardian-consent gate | ✅ blocks under-14 (PIPA §22-2) | [ConsentGate.swift](App/Sources/Core/ConsentGate.swift) |
-| Accessibility (VoiceOver/Dynamic Type) | ✅ a11y labels + system fonts | LearnView |
-| iPad adaptive layout | ✅ size class (2↔4 columns) | [HomeView.swift](App/Sources/Features/Home/HomeView.swift) |
+| Word-relevant images | loremflickr.com keyword images; backend `imageUrl` takes priority | LearnView.imageURL() |
+| Bookmark collection view | Saved words + sentences list, swipe-to-delete | [BookmarksView.swift](App/Sources/Features/Learn/BookmarksView.swift) |
+| Resume learning | Restores last index on re-entry (UserDefaults) | LocalStore.saveProgress / loadProgress |
+| Swipe gesture navigation | DragGesture — left = next, right = previous | LearnView body |
+| WriteView UX | 💡 hint panel (full sentence), ‹ prev button, 🏷 bookmark toggle, 4-button toolbar | WriteView.swift |
 
 ## Tests
 ```bash
 make test
 # per iteration: test/impl/<Nth>/scenario.md + result.md
 ```
-Latest iteration 3: **PASS** (8 unit + 1 UI, App Store validation errors fixed & verified). → [3](test/impl/3/result.md) · [2](test/impl/2/result.md) · [1](test/impl/1/result.md)
+Latest iteration 3: **PASS** (8 unit + 1 UI). → [3](test/impl/3/result.md) · [2](test/impl/2/result.md) · [1](test/impl/1/result.md)
 
-## Troubleshooting (issues actually hit)
+## Troubleshooting (issues actually encountered)
 | Symptom | Cause | Fix |
 |---|---|---|
-| `does not contain a scheme named "App"` | SPM-only package = no app scheme | adopt XcodeGen (project.yml), `make gen` |
-| `scheme ... iPhone 15` missing | machine only has 17-series sims | Makefile DEST `iPhone 17` |
-| `Tts.shared not concurrency-safe` | Swift 6 strict concurrency | `@MainActor` |
-| test `Cannot code sign ... Info.plist` | test targets had no generated plist | project.yml `GENERATE_INFOPLIST_FILE: YES` |
-| upload `CFBundleIconName missing (90713)` / icon 120·152 missing (90022/3) | no real icon PNG + asset-catalog partial plist not merged with xcodegen custom Info.plist | add 1024 PNG + declare CFBundleIconName/CFBundleIcons(~ipad) in info.properties |
-| upload `no orientations (90474)` | UISupportedInterfaceOrientations absent | add iPhone portrait + ~ipad 4 orientations in info.properties |
-| word image blank | offline, picsum unreachable | expected (placeholder); shows when online |
+| `does not contain a scheme named "App"` | SPM-only package has no app scheme | Adopt XcodeGen (`make gen`) |
+| `scheme ... iPhone 15` not found | Machine only has 17-series simulators | Set Makefile DEST to `iPhone 17 Pro` |
+| `Tts.shared not concurrency-safe` | Swift 6 strict concurrency | Add `@MainActor` |
+| test `Cannot code sign ... Info.plist` | Test targets had no generated plist | Add `GENERATE_INFOPLIST_FILE: YES` in project.yml |
+| upload `CFBundleIconName missing (90713)` | No real icon PNG present | Add 1024 PNG + declare CFBundleIconName in info.properties |
+| upload `no orientations (90474)` | UISupportedInterfaceOrientations absent | Add iPhone portrait + ~ipad 4-way in info.properties |
+| `SentenceItem encode(to:) invalid redeclaration` | Swift synthesizes encode from CodingKeys — manual impl conflicts | Remove manual `encode(to:)` (synthesis is sufficient) |
 
-## Next steps (PRD remainder)
-- Real **server integration** for login/signup (live API_BASE_URL) + `/users/me` boot restore.
+## Next Steps (PRD remainder)
+- Real **server integration** for login/signup (live `API_BASE_URL`) + `/users/me` boot restore.
 - Live SRS grading (`/progress/grade`) and server analysis (`/me/analysis`).
-- Wire guest dueCount to local progress (LocalStore) — currently a mock sample.
-- Finalize app-icon **design** — currently an auto-generated placeholder (brand blue + "VNB4 TOEIC").
-- a11y regression (Dynamic Type snapshots / accessibility audit) tests.
-- Re-verify a real upload (EAS/Transporter) — currently confirmed only via the simulator build plist.
+- Wire guest `dueCount` to LocalStore progress — currently a mock sample.
+- Finalize app-icon **design** — currently an auto-generated placeholder.
+- a11y regression tests (Dynamic Type snapshots · VoiceOver audit).
+- Re-verify a real TestFlight upload (EAS/Transporter).
