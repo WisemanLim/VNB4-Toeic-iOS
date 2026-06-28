@@ -1,4 +1,4 @@
-# ===== common / 공통 (env·secrets·logs·editor) =====
+# ===== 환경·시크릿 =====
 .env
 .env.*
 !.env.example
@@ -12,19 +12,11 @@ logs/
 tmp/
 .tmp/
 *.pid
-.idea/
-.vscode/*
-!.vscode/extensions.json
-!.vscode/settings.shared.json
-*.swp
-*.swo
-*~
 .omc/*
-# test 원본 로그 비커밋 / raw test logs (test-runner standard)
+# test-runner 표준: raw 로그 비커밋
 test/**/logs/
 
-# ===== platform / 플랫폼 (macOS·Windows·Linux) =====
-# --- macOS ---
+# ===== macOS =====
 .DS_Store
 .DS_Store?
 ._*
@@ -33,48 +25,45 @@ test/**/logs/
 .Spotlight-V100
 .Trashes
 Icon?
-# --- Windows ---
-Thumbs.db
-Thumbs.db:encryptable
-ehthumbs.db
-ehthumbs_vista.db
-Desktop.ini
-$RECYCLE.BIN/
-*.lnk
-# --- Linux ---
-*~
-.directory
-.Trash-*
-.nfs*
-.fuse_hidden*
 
-# ===== Swift / Xcode (iOS) =====
-## Build / DerivedData
+# ===== Swift / Xcode =====
+
+## 빌드 산출물
 build/
 DerivedData/
 *.xcarchive
 *.ipa
 *.dSYM.zip
 *.dSYM
-## Xcode user state
+
+## Xcode 사용자 상태 (기기/레이아웃 설정 등 — 개인용)
 xcuserdata/
 *.xcuserstate
 *.xcscmblueprint
-## SwiftPM
+*.xcuserdatad/
+
+## SwiftPM (SPM 미사용 시에도 생성될 수 있음)
 .build/
 .swiftpm/
+# Package.resolved 는 SPM 의존성 재현성을 위해 커밋 권장.
+# 이 프로젝트는 SPM 미사용이므로 무시.
 Package.resolved
-## XcodeGen 생성물 (project.yml 만 커밋)
+
+## XcodeGen — project.yml 만 커밋; 생성된 .xcodeproj 는 커밋 포함
+# (현재 VNB4Toeic.xcodeproj 직접 편집 중이므로 주석 처리)
 # *.xcodeproj
-# App/Info.plist
-## CocoaPods (사용 시 / if used)
+
+## CocoaPods (미사용)
 Pods/
+*.xcworkspace/contents.xcworkspacedata
+
 ## Fastlane
 fastlane/report.xml
 fastlane/Preview.html
 fastlane/screenshots/**/*.png
 fastlane/test_output/
-## 서명/시크릿 — 절대 커밋 금지 / never commit signing material
+
+## 서명·프로비저닝 — 절대 커밋 금지
 *.mobileprovision
 *.p12
 *.cer
