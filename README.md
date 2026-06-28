@@ -136,7 +136,7 @@ make deploy  # fastlane ios beta (TestFlight 업로드)
 make test
 # 개별: test/impl/<Nth>/scenario.md + result.md
 ```
-최신 차수 3 결과: **PASS** (8 unit + 1 UI). → [3](test/impl/3/result.md) · [2](test/impl/2/result.md) · [1](test/impl/1/result.md)
+최신 차수 5 결과: **PASS** (8 unit + 1 UI). → [5](test/impl/5/result.md) · [4](test/impl/4/result.md) · [3](test/impl/3/result.md) · [2](test/impl/2/result.md) · [1](test/impl/1/result.md)
 
 ## 트러블슈팅 (실제 만난 이슈)
 | 증상 | 원인 | 조치 |

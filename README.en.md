@@ -136,7 +136,7 @@ make deploy  # fastlane ios beta (TestFlight upload)
 make test
 # per iteration: test/impl/<Nth>/scenario.md + result.md
 ```
-Latest iteration 3: **PASS** (8 unit + 1 UI). → [3](test/impl/3/result.md) · [2](test/impl/2/result.md) · [1](test/impl/1/result.md)
+Latest iteration 5: **PASS** (8 unit + 1 UI). → [5](test/impl/5/result.md) · [4](test/impl/4/result.md) · [3](test/impl/3/result.md) · [2](test/impl/2/result.md) · [1](test/impl/1/result.md)
 
 ## Troubleshooting (issues actually encountered)
 | Symptom | Cause | Fix |
