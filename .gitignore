@@ -65,8 +65,8 @@ xcuserdata/
 .swiftpm/
 Package.resolved
 ## XcodeGen 생성물 (project.yml 만 커밋)
-*.xcodeproj
-App/Info.plist
+# *.xcodeproj
+# App/Info.plist
 ## CocoaPods (사용 시 / if used)
 Pods/
 ## Fastlane
