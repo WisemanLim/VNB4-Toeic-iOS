@@ -17,6 +17,10 @@ enum Repo {
     }
 
     static func dueCount() async throws -> Int {
+        let isGuest = await !APIClient.shared.isAuthed()
+        if isGuest {
+            return await MainActor.run { LocalStore.shared.localDueCount }
+        }
         let stats = try await APIClient.shared.request("/progress/stats", as: [ProgressStat].self)
         return stats.first { $0.state == "review" }?._count._all ?? 0
     }
@@ -24,6 +28,11 @@ enum Repo {
     /// "due" → SRS queue; "part-N" → every word of part N (paged); else a lesson by id.
     static func learnQueue(_ lessonId: String) async throws -> [Word] {
         if lessonId == "due" {
+            let isGuest = await !APIClient.shared.isAuthed()
+            if isGuest {
+                let words = await MainActor.run { LocalStore.shared.localDueWords(limit: 30) }
+                return words.isEmpty ? Array(Seed.words.prefix(30)) : words
+            }
             let prog = try await APIClient.shared.request("/progress/due?limit=30", as: [Progress].self)
             return prog.map(\.word)
         }

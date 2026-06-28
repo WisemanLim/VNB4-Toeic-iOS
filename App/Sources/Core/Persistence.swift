@@ -113,6 +113,26 @@ final class LocalStore: ObservableObject {
         (loadUD([String: Int].self, key: "learn_progress") ?? [:])[lessonId] ?? 0
     }
 
+    // MARK: – SRS due (guest path: words with grade < GRADE_KNOWN=4)
+
+    var localDueCount: Int {
+        let req = NSFetchRequest<NSManagedObject>(entityName: "WordProgress")
+        req.predicate = NSPredicate(format: "grade < 4")
+        return (try? ctx.count(for: req)) ?? 0
+    }
+
+    func localDueWords(limit: Int) -> [Word] {
+        let req = NSFetchRequest<NSManagedObject>(entityName: "WordProgress")
+        req.predicate = NSPredicate(format: "grade < 4")
+        req.sortDescriptors = [NSSortDescriptor(key: "grade", ascending: true),
+                               NSSortDescriptor(key: "updatedAt", ascending: true)]
+        req.fetchLimit = limit
+        let rows = (try? ctx.fetch(req)) ?? []
+        let ids = rows.compactMap { $0.value(forKey: "wordId") as? String }
+        let wordMap = Dictionary(uniqueKeysWithValues: Seed.words.map { ($0.id, $0) })
+        return ids.compactMap { wordMap[$0] }
+    }
+
     // MARK: – SRS grade
 
     func recordGrade(wordId: String, grade: Int) {
