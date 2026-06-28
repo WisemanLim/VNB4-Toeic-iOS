@@ -117,6 +117,7 @@ make deploy  # fastlane ios beta (TestFlight upload)
 | Sentence writing · shadowing (chips → check → 🔊) | [WriteView.swift](App/Sources/Features/Write/WriteView.swift) |
 | Guest/login + Email auth | [AuthStore.swift](App/Sources/Core/AuthStore.swift) |
 | Favorites/bookmarks persistence | [Persistence.swift](App/Sources/Core/Persistence.swift) |
+| Guest SRS live progress (dueCount + due queue → LocalStore grade < 4) | [Repository.swift](App/Sources/Core/Repository.swift) + [Persistence.swift](App/Sources/Core/Persistence.swift) |
 | Minor guardian-consent gate (PIPA §22-2) | [ConsentGate.swift](App/Sources/Core/ConsentGate.swift) |
 | Accessibility (VoiceOver · Dynamic Type) | LearnView accessibilityLabel |
 | iPad adaptive layout (2↔4 columns) | [HomeView.swift](App/Sources/Features/Home/HomeView.swift) |
@@ -151,7 +152,6 @@ Latest iteration 3: **PASS** (8 unit + 1 UI). → [3](test/impl/3/result.md) · 
 ## Next Steps (PRD remainder)
 - Real **server integration** for login/signup (live `API_BASE_URL`) + `/users/me` boot restore.
 - Live SRS grading (`/progress/grade`) and server analysis (`/me/analysis`).
-- Wire guest `dueCount` to LocalStore progress — currently a mock sample.
 - Finalize app-icon **design** — currently an auto-generated placeholder.
 - a11y regression tests (Dynamic Type snapshots · VoiceOver audit).
 - Re-verify a real TestFlight upload (EAS/Transporter).

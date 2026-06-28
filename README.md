@@ -117,6 +117,7 @@ make deploy  # fastlane ios beta (TestFlight 업로드)
 | 문장쓰기·쉐도잉 (단어칩→확인→🔊) | [WriteView.swift](App/Sources/Features/Write/WriteView.swift) |
 | 게스트/로그인 + Email 인증 | [AuthStore.swift](App/Sources/Core/AuthStore.swift) |
 | 즐겨찾기·북마크 영속화 | [Persistence.swift](App/Sources/Core/Persistence.swift) |
+| 게스트 SRS 실 진도 연동 (dueCount + due 큐 → LocalStore grade < 4) | [Repository.swift](App/Sources/Core/Repository.swift) + [Persistence.swift](App/Sources/Core/Persistence.swift) |
 | 미성년 보호자 동의 게이트 (PIPA §22-2) | [ConsentGate.swift](App/Sources/Core/ConsentGate.swift) |
 | 접근성 (VoiceOver·Dynamic Type) | LearnView accessibilityLabel |
 | iPad 적응형 레이아웃 (2↔4열) | [HomeView.swift](App/Sources/Features/Home/HomeView.swift) |
@@ -151,7 +152,6 @@ make test
 ## 다음 단계 (PRD 잔여)
 - 로그인/회원가입 **서버 연동** 실검증 (실 API_BASE_URL) + `/users/me` 부팅 복원.
 - SRS 서버 채점(`/progress/grade`)·서버 분석(`/me/analysis`) 실연동.
-- 게스트 dueCount를 LocalStore 진도와 연동 (현재 mock 샘플).
 - 앱 아이콘 **디자인 확정** — 현재 자동 생성 플레이스홀더.
 - a11y 자동 회귀 (Dynamic Type 스냅샷·VoiceOver 감사) 시험 도입.
 - 실 TestFlight 업로드 재검증.
