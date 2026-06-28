@@ -1,0 +1,82 @@
+# ===== common / 공통 (env·secrets·logs·editor) =====
+.env
+.env.*
+!.env.example
+*.local
+*.pem
+*.key
+secrets.*
+.secrets/
+*.log
+logs/
+tmp/
+.tmp/
+*.pid
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.shared.json
+*.swp
+*.swo
+*~
+.omc/*
+# test 원본 로그 비커밋 / raw test logs (test-runner standard)
+test/**/logs/
+
+# ===== platform / 플랫폼 (macOS·Windows·Linux) =====
+# --- macOS ---
+.DS_Store
+.DS_Store?
+._*
+.AppleDouble
+.LSOverride
+.Spotlight-V100
+.Trashes
+Icon?
+# --- Windows ---
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+# --- Linux ---
+*~
+.directory
+.Trash-*
+.nfs*
+.fuse_hidden*
+
+# ===== Swift / Xcode (iOS) =====
+## Build / DerivedData
+build/
+DerivedData/
+*.xcarchive
+*.ipa
+*.dSYM.zip
+*.dSYM
+## Xcode user state
+xcuserdata/
+*.xcuserstate
+*.xcscmblueprint
+## SwiftPM
+.build/
+.swiftpm/
+Package.resolved
+## XcodeGen 생성물 (project.yml 만 커밋)
+*.xcodeproj
+App/Info.plist
+## CocoaPods (사용 시 / if used)
+Pods/
+## Fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output/
+## 서명/시크릿 — 절대 커밋 금지 / never commit signing material
+*.mobileprovision
+*.p12
+*.cer
+*.certSigningRequest
+AuthKey_*.p8

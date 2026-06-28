@@ -1,0 +1,4 @@
+# VNB4Toeic — Fastlane Appfile (값은 ENV/CI 시크릿 주입, 실값 커밋 금지)
+# app_identifier(ENV["APP_IDENTIFIER"] || "com.vnb4.vocabnote")
+# apple_id(ENV["APPLE_ID"])
+# team_id(ENV["APPLE_TEAM_ID"])

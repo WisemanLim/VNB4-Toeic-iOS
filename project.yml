@@ -1,0 +1,86 @@
+# VNB4Toeic — XcodeGen spec. `xcodegen generate` → VNB4Toeic.xcodeproj (커밋: project.yml, .xcodeproj 는 gitignore)
+name: VNB4Toeic
+options:
+  bundleIdPrefix: com.vnb4
+  deploymentTarget:
+    iOS: "16.0"
+  createIntermediateGroups: true
+configs:
+  Debug: debug
+  Staging: release
+  Release: release
+targets:
+  App:
+    type: application
+    platform: iOS
+    deploymentTarget: "16.0"
+    sources:
+      - App/Sources
+      - path: App/Resources
+        optional: true
+    configFiles:
+      Debug: Config/Debug.xcconfig
+      Staging: Config/Staging.xcconfig
+      Release: Config/Release.xcconfig
+    info:
+      path: App/Info.plist
+      properties:
+        # xcconfig 빌드설정 → Info.plist → Env.swift 가 읽음
+        APP_FLAVOR: $(APP_FLAVOR)
+        API_BASE_URL: $(API_BASE_URL)
+        CFBundleDisplayName: Vocabulary Notebook for TOEIC
+        # Asset-catalog plist merge is unreliable with a custom Info.plist (xcodegen),
+        # so declare the icon keys explicitly. Icon PNGs come from Assets.xcassets/AppIcon.
+        CFBundleIconName: AppIcon
+        CFBundleIcons:
+          CFBundlePrimaryIcon:
+            CFBundleIconName: AppIcon
+        CFBundleIcons~ipad:
+          CFBundlePrimaryIcon:
+            CFBundleIconName: AppIcon
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.vnb4.vocabnote
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        TARGETED_DEVICE_FAMILY: "1,2"   # iPhone + iPad
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        SWIFT_VERSION: "6.0"
+  AppTests:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget: "16.0"
+    sources: [AppTests]
+    settings:
+      base: { GENERATE_INFOPLIST_FILE: YES }
+    dependencies:
+      - target: App
+  AppUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    deploymentTarget: "16.0"
+    sources: [AppUITests]
+    settings:
+      base: { GENERATE_INFOPLIST_FILE: YES }
+    dependencies:
+      - target: App
+schemes:
+  App:
+    build:
+      targets:
+        App: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - AppTests
+        - AppUITests
